@@ -5,11 +5,12 @@ const express = require("express"),
     path = require('path'),
     paths = require("./paths.json"),
     fs = require("fs"),
-    dotenv = require('dotenv').config;
+    dotenv = require('dotenv').config,
+    date = require("./lib/timestamp.js");
 const app = express(),
     PORT = 8000;
 const SecurityMethod = require("./lib/security/securityMethod.js")
-const {MObject} = require("./lib/mobject.js")
+const { MObject } = require("./lib/mobject.js")
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors())
@@ -19,14 +20,14 @@ if (process.env.SSL == 1) {
         key: atob(process.env.PRIVKEY),
     };
     http.createServer(options, app).listen(PORT, () => {
-        console.log(`[SERVER] Running server at ${PORT}`)
+        date.print(`[SERVER] Running server at ${PORT}`)
     });
     https.createServer(options, app).listen(PORT + 1, () => {
-        console.log(`[SERVER/SSL] Running server at ${PORT + 1}`)
+        date.print(`[SERVER/SSL] Running server at ${PORT + 1}`)
     });
 } else {
     app.listen(PORT, () => {
-        console.log(`[SERVER] Running server at ${PORT}`)
+        date.print(`[SERVER] Running server at ${PORT}`)
     });
 }
 
@@ -37,32 +38,45 @@ for (const module in paths.modules) {
 app.use(cors())
 
 app.get("/", (req, res) => {
-    console.log(`get: ${JSON.stringify(req.body)}`)
+    date.print(`/ (GET): ${JSON.stringify(req.body)}`)
     res.json({ "success": "true" })
 })
 app.post("/", (req, res) => {
-    console.log(`post: ${JSON.stringify(req.body)}`)
+    date.print(`/ (POST): ${JSON.stringify(req.body)}`)
+    res.json({ "success": "true" })
+});
+
+app.post("/sul", (req, res) => {
+    date.print(`/sul (POST): ${JSON.stringify(req.body)}`)
+    res.json({ "success": "true" })
+});
+app.post("/screenshot", (req, res) => {
+    date.print(`/screenshot (POST): ${JSON.stringify(req.body)}`)
+    res.json({ "success": "true" })
+});
+app.get("/signature", (req, res) => {
+    date.print(`/signature (GET): ${JSON.stringify(req.body)}`)
     res.json({ "success": "true" })
 });
 
 
-
 app.get("/crossdomain.xml", (req, res) => {
+    date.print(`/crossdomain.xml (GET): ${JSON.stringify(req.body)}`)
     const filePath = path.join(__dirname, 'crossdomain.xml');
     res.sendFile(filePath);
 });
-app.get("/server", (req, res) => {
+app.get("/servers", (req, res) => {
     var servers = []
-    for (let i = 0; i <= 50; i++) {
+    for (let i = 0; i <= 11; i++) {
         count = i
         servers.push({
-            host: "localhost",
+            host: "127.0.0.1",
             port: "13985",
-            usage: 0.02,
-            name: `CAMILOW_${String(count).padStart(2, "0")}`
+            usage: 0.0,
+            name: `NS_${String(count).padStart(2, "0")}`
         })
     }
-    console.log(`/server: ${JSON.stringify(req.body)}`)
+    date.print(`/server: ${JSON.stringify({ request: req.body, response: servers.length })}`)
     return res.json(servers)
 })
 
@@ -73,9 +87,7 @@ app.get("/locale/:lang", (req, res) => {
 
 
 app.get("/npc", (req, res) => {
-    const date = new Date();
-    const timestamp = `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()} ${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`;
-    console.log(`[${timestamp}] /npc: ${JSON.stringify(req.body)}`)
+    date.print(`/npc: ${JSON.stringify([req.connection.remoteAddress, req.connection.remotePort])}`)
     const filePath = path.join(`${__dirname}/command.npc`);
     try {
         const data = fs.readFileSync(filePath, "utf-8");
@@ -86,5 +98,4 @@ app.get("/npc", (req, res) => {
     }
 });
 
-value = new SecurityMethod().createValidationDigest("kno9", "ABDpIUDlKDABDpIU")
-console.log(typeof (value), value)
+//value = new SecurityMethod().createValidationDigest("kno9", "ABDpIUDlKDABDpIU")
