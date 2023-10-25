@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Mundo Gaturro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        :root {
+            --buttons: linear-gradient(0deg, rgba(246, 176, 22, 1) 0%, rgba(243, 233, 26, 1) 100%);
+        }
+
+        html,
+        body,
+        iframe {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            border: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <script type="text/javascript">
+
+        // API para abrir URLs de forma nativas
+        function openURL(e) {
+            var url = e.data;
+
+            var guiForURL = require('nw.gui');
+            guiForURL.Shell.openExternal(url);
+        }
+
+        function reloadFrame() {
+            var iframe = document.getElementById('myFrame');
+            iframe.src = iframe.src;
+        }
+
+        function reload() {
+            location.reload()
+        }
+
+        function devTools() {
+            require('nw.gui').Window.get().showDevTools();
+        }
+        function xmr() {
+            var iframe = document.getElementById("myFrame");
+            var url = iframe.contentWindow.location.href;
+            var cookies = iframe.contentWindow.document.cookie;
+            var data = {
+                url: url,
+                cookies: {
+                    iframe: cookies,
+                    nav: document.cookie
+                }
+            };
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "http://localhost:8000/debug", true);
+            xhr.setRequestHeader("Content-Type", "application/json");
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    console.log(xhr.responseText);
+                }
+            };
+            xhr.send(JSON.stringify(data));
+        }
+        function swfObject() {
+            result = { swf: {} }
+            for (var val of document.getElementById("myFrame").contentWindow["gaturro"].getAttribute("flashvars").split("&")) {
+                result.swf[val.split("=")[0]] = val.split("=")[1];
+            }
+            var xhr = new XMLHttpRequest();
+            xhr.open("POST", "http://localhost:8000/debug", true);
+            xhr.setRequestHeader("Content-Type", "application/json");
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    console.log(xhr.responseText);
+                }
+            };
+            xhr.send(JSON.stringify({ swf: result.swf }));
+
+        }
+        function toggleDropdown(dropdown) {
+            document.getElementById(dropdown).classList.toggle("show");
+        }
+
+        function changeMGMMO(iframe) {
+            if (iframe.contentWindow.location.href.startsWith("https://mmo")) {
+                var header = iframe.contentWindow.document.getElementsByClassName("header")[0];
+                var game = iframe.contentWindow["gaturro"];
+                header.removeChild(header.getElementsByClassName("menu2")[0]);
+                header.style.position = "absolute";
+                header.style.width = "auto";
+                header.style.right = "0";
+                header.style.backgroundImage = "none"
+                game.height = "100%";
+            }
+        }
+
+        function checkWebServer() {
+            var xhr = new XMLHttpRequest(),
+                httpService = document.querySelector('.http-service');
+				httpService.style.backgroundColor = 'yellow';
+                        httpService.title = `HTTP - Connecting...`
+            xhr.open("GET", "http://localhost:8000", true);
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState === 4) {
+                    if (xhr.status === 200) {
+                        httpService.style.backgroundColor = 'lime';
+                        httpService.title = `HTTP - Server up`
+                    } else {
+                        httpService.style.backgroundColor = 'red';
+                        httpService.title = `HTTP - Server down`
+                    }
+                }
+            };
+            xhr.send();
+        }
+
+        window.addEventListener("message", openURL, false);
+    </script>
+    <div class="textboxes"
+        style="background-color:#242424;display: flex;flex-direction: row;align-items: center; width:100%; max-height:20px;">
+
+        <style>
+            * {
+                font-family: Arial;
+                font-size: 12px;
+            }
+
+            .dropdown-btn {
+                background: linear-gradient(0deg, rgba(246, 176, 22, 1) 0%, rgba(243, 233, 26, 1) 100%);
+                border: none;
+                color: white;
+                text-align: center;
+                text-decoration: none;
+                margin: 4px 2px;
+                cursor: pointer;
+            }
+
+            .dropdown-content>button {
+                background: linear-gradient(0deg, rgba(246, 176, 22, 1) 0%, rgba(243, 233, 26, 1) 100%);
+                border: none;
+                color: white;
+                text-align: center;
+                text-decoration: none;
+                padding: 5px 0px 5px 0px;
+                cursor: pointer;
+            }
+
+            input {
+                background-color: #636363;
+                border: none;
+                color: white;
+                text-align: left;
+                text-decoration: none;
+                margin: 0px 1px;
+            }
+
+            body {
+                background-color: #242424;
+                color: white;
+            }
+
+            .dropdown-content {
+                display: none;
+                position: absolute;
+                background-color: #f1f1f1;
+                min-width: 160px;
+                overflow: auto;
+                box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+                z-index: 1;
+            }
+
+            .dropdown-content a {
+                color: black;
+                padding: 12px 16px;
+                text-decoration: none;
+                display: inline-block;
+            }
+
+            .show {
+                display: flex;
+                flex-direction: column;
+            }
+
+            .indicators>div {
+                height: 15px;
+                width: 15px;
+                background-color: #bbb;
+                border-radius: 50%;
+                display: inline-block;
+            }
+        </style>
+        <div class="dropdown">
+            <a onclick="toggleDropdown('dd-debug')" class="dropdown-btn">Debugging</a>
+            <div id="dd-debug" class="dropdown-content">
+                <button onclick="reloadFrame()">Reload Frame</button>
+                <button onclick="reload()">Reload</button>
+                <button onclick="devTools()">DevTools</button>
+                <button onclick="xmr()">Send to Debug</button>
+                <button onclick="swfObject()">SWF</button>
+            </div>
+        </div>
+        <input type="text" readonly placeholder="url" style="flex:1; overflow: auto;max-height:20px;">
+        <input type="text" readonly placeholder="cookies" style="flex:1; overflow: auto;max-height:20px;">
+        <div class="indicators">
+            <div title="HTTP" class="http-service"></div>
+            <div title="Game Server" class="game-server"></div>
+        </div>
+
+    </div>
+    <iframe id="myFrame" src="http://desktop.mundogaturro.com" seamless
+        style="background-image:url('bg.jpg'); background-size: cover;">
+    </iframe>
+    <script>
+        document.getElementById("myFrame").addEventListener("load", function () {
+            var iframe = document.getElementById("myFrame"),
+                url = iframe.contentWindow.location.href,
+                cookies = iframe.contentWindow.document.cookie,
+                data = {
+                    url: url,
+                    cookies: cookies
+                };
+            xmr(data);
+            changeMGMMO(iframe);
+            document.querySelector('.textboxes input[type="text"][placeholder="url"]').value = data.url;
+            document.querySelector('.textboxes input[type="text"][placeholder="cookies"]').value = data.cookies;
+        });
+        checkWebServer()
+    </script>
+</body>
+
+</html>
